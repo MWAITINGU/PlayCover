@@ -19,7 +19,6 @@ jobs:
           gem install fastlane
           bundle install
           pip install setuptools
-          npm install https://github.com/PlayCover/create-dmg
 
       - name: Set build number
         shell: bash
@@ -35,8 +34,7 @@ jobs:
       - name: Create DMG
         shell: bash
         run: |
-          npx create-dmg ./output/PlayCover.app ./output
-          mv ./output/*.dmg ./output/PlayCover_nightly_${{ github.run_number }}.dmg
+          hdiutil create -volname "PlayCover" -srcfolder ./output/PlayCover.app -ov -format UDZO ./output/PlayCover_nightly_${{ github.run_number }}.dmg
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
