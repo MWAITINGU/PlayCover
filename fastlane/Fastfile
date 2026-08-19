@@ -24,7 +24,6 @@ platform :mac do
   end
 end
 
-
 lane :release do
   setup_ci if ENV['CI']
   match(type: "developer_id", readonly: true)
@@ -45,20 +44,22 @@ end
 
 lane :nightly do
   setup_ci if ENV['CI']
-  match(type: "developer_id", readonly: true)
+  # match(type: "developer_id", readonly: true)  # 注释掉这行，跳过证书
+  
   Dir.chdir("..") do
     sh("carthage", "update", "--use-xcframeworks")
   end
   carthage(use_xcframeworks: true)
   build_mac_app(
-    configuration: "Nightly",
+    configuration: "Debug",           # 改成 Debug，编译更快
     scheme: "PlayCover",
     output_directory: "output",
     output_name: "PlayCover",
-    export_method: "developer-id",
+    export_method: "development",       # 改成 development，不需要开发者ID
     destination: "generic/platform=macOS",
     skip_package_pkg: true,
-    xcargs: "FASTLANE=1",
+    skip_codesigning: true,           # ← 关键：跳过代码签名
+    xcargs: "FASTLANE=1 CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=",
     )
 end
 
