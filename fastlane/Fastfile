@@ -49,8 +49,8 @@ lane :nightly do
   Dir.chdir("..") do
     sh("carthage", "update", "--use-xcframeworks")
 
-    # 用 xcodebuild 直接编译（不 archive/export），ad-hoc 签名绕过证书
-    sh("xcodebuild", "-scheme", "PlayCover", "-project", "./PlayCover.xcodeproj", "-configuration", "Nightly", "-derivedDataPath", "output/DerivedData", "CODE_SIGN_IDENTITY=-", "build")
+    # 用 xcodebuild 直接编译，完全跳过代码签名
+    sh("xcodebuild", "-scheme", "PlayCover", "-project", "./PlayCover.xcodeproj", "-configuration", "Nightly", "-derivedDataPath", "output/DerivedData", "CODE_SIGNING_ALLOWED=NO", "build")
 
     # 把编译好的 app 复制到 output 目录，方便 workflow 后续打 DMG
     sh("mkdir", "-p", "output")
