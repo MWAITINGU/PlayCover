@@ -44,9 +44,10 @@ end
 
 lane :nightly do
   Dir.chdir("..") do
-    # 自动禁用 Codesign sparkle 脚本，避免 CI 无证书时构建失败
+    # 禁用 Codesign sparkle 和 SwiftLint 脚本，避免 CI 无证书/ lint 失败
     pbxproj = File.read("PlayCover.xcodeproj/project.pbxproj")
     pbxproj.gsub!(/(AAC28F222899A05B005057FB.*?runOnlyForDeploymentPostprocessing = )0;/m, '\11;')
+    pbxproj.gsub!(/(36E7AB27288A0B64004C0C3A.*?runOnlyForDeploymentPostprocessing = )0;/m, '\11;')
     File.write("PlayCover.xcodeproj/project.pbxproj", pbxproj)
 
     sh("carthage", "update", "--use-xcframeworks")
