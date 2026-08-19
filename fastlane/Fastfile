@@ -45,22 +45,17 @@ end
 lane :nightly do
   setup_ci if ENV['CI']
   # match(type: "developer_id", readonly: true)  # 注释掉这行，跳过证书
-  
+
   Dir.chdir("..") do
     sh("carthage", "update", "--use-xcframeworks")
   end
-  carthage(use_xcframeworks: true)
-  build_mac_app(
-    configuration: "Debug",           # 改成 Debug，编译更快
-    scheme: "PlayCover",
-    output_directory: "output",
-    output_name: "PlayCover",
-    export_method: "development",       # 改成 development，不需要开发者ID
-    destination: "generic/platform=macOS",
-    skip_package_pkg: true,
-    skip_codesigning: true,           # ← 关键：跳过代码签名
-    xcargs: "FASTLANE=1 CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=",
-    )
+
+  # 用 xcodebuild 直接编译（不 archive/export），ad-hoc 签名绕过证书
+  sh("xcodebuild", "-scheme", "PlayCover", "-project", "./PlayCover.xcodeproj", "-configuration", "Nightly", "-derivedDataPath", "output/DerivedData", "CODE_SIGN_IDENTITY=-", "build")
+
+  # 把编译好的 app 复制到 output 目录，方便 workflow 后续打 DMG
+  sh("mkdir", "-p", "output")
+  sh("cp", "-R", "output/DerivedData/Build/Products/Nightly/PlayCover.app", "output/PlayCover.app")
 end
 
 lane :notarize_app do
