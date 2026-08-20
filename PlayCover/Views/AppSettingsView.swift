@@ -25,7 +25,7 @@ struct AppSettingsView: View {
     @State var appIcon: NSImage?
     @State var hasPlayTools: Bool?
     @State var hasAlias: Bool?
-
+    @State private var selectedTab = 0
     @State private var currentTask = BlockingTask.none
     @State private var cache = DataCache.instance
 
@@ -75,39 +75,50 @@ struct AppSettingsView: View {
                 appIcon = cache.readImage(forKey: viewModel.app.info.bundleIdentifier)
             }
 
-            TabView {
-                KeymappingView(settings: $viewModel.settings)
-                    .tabItem {
-                        Text("settings.tab.km")
+            VStack(spacing: 0) {
+                Picker("", selection: $selectedTab) {
+                    Text("settings.tab.km").tag(0)
+                    Text("settings.tab.graphics").tag(1)
+                    Text("settings.tab.bypasses").tag(2)
+                    Text("settings.tab.misc").tag(3)
+                    Text("settings.tab.info").tag(4)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .padding(.top, 8)
+
+                Divider()
+                    .padding(.vertical, 8)
+
+                Group {
+                    switch selectedTab {
+                    case 0:
+                        KeymappingView(settings: $viewModel.settings)
+                            .disabled(!(hasPlayTools ?? true))
+                    case 1:
+                        GraphicsView(settings: $viewModel.settings)
+                            .disabled(!(hasPlayTools ?? true))
+                    case 2:
+                        BypassesView(settings: $viewModel.settings,
+                                     hasPlayTools: $hasPlayTools,
+                                     task: $currentTask,
+                                     app: viewModel.app)
+                            .disabled(!(hasPlayTools ?? true))
+                    case 3:
+                        MiscView(settings: $viewModel.settings,
+                                 closeView: $closeView,
+                                 hasPlayTools: $hasPlayTools,
+                                 hasAlias: $hasAlias,
+                                 task: $currentTask,
+                                 app: viewModel.app,
+                                 applicationCategoryType: viewModel.app.info.applicationCategoryType)
+                    case 4:
+                        InfoView(info: viewModel.app.info, hasPlayTools: (hasPlayTools ?? true))
+                    default:
+                        EmptyView()
                     }
-                    .disabled(!(hasPlayTools ?? true))
-                GraphicsView(settings: $viewModel.settings)
-                    .tabItem {
-                        Text("settings.tab.graphics")
-                    }
-                    .disabled(!(hasPlayTools ?? true))
-                BypassesView(settings: $viewModel.settings,
-                             hasPlayTools: $hasPlayTools,
-                             task: $currentTask,
-                             app: viewModel.app)
-                    .tabItem {
-                        Text("settings.tab.bypasses")
-                    }
-                    .disabled(!(hasPlayTools ?? true))
-                MiscView(settings: $viewModel.settings,
-                         closeView: $closeView,
-                         hasPlayTools: $hasPlayTools,
-                         hasAlias: $hasAlias,
-                         task: $currentTask,
-                         app: viewModel.app,
-                         applicationCategoryType: viewModel.app.info.applicationCategoryType)
-                    .tabItem {
-                        Text("settings.tab.misc")
-                    }
-                InfoView(info: viewModel.app.info, hasPlayTools: (hasPlayTools ?? true))
-                    .tabItem {
-                        Text("settings.tab.info")
-                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .frame(minWidth: 500, minHeight: 250)
             .opacity(hasPlayTools != nil ? 1 : 0)
@@ -144,8 +155,8 @@ struct AppSettingsView: View {
         }
         .padding()
         .frame(width: 600, height: 400)
-    }
-}
+             }
+        }
 
 struct KeymappingView: View {
     @Binding var settings: AppSettings
